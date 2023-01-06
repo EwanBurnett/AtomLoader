@@ -7,7 +7,7 @@ int main(){
 
     Atom::Model model;
 
-    model.ImportFromFile("");
+    model.ImportFromFile("../Assets/cube.obj");
     model.LoadFromBinary("");
 
     Atom::Exporter::ExportModelToImage(model, "Exports/");

@@ -24,6 +24,8 @@ namespace Atom {
     */
     class Model {
     public:
+        friend class Importer;
+
         Model();
         Model(const Model& model);
         Model(Model&& model) noexcept;
