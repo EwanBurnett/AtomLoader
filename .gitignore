@@ -1,0 +1,7 @@
+# Ignore all build files
+[Bb]uild/
+[Oo]ut/
+
+# Ignore Visual Studio Generated Files 
+.vs/
+
