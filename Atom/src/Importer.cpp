@@ -3,25 +3,28 @@
 
 #include <assert.h>
 
+#include <fstream>
+
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
 
 using namespace Atom;
 
-Model& Atom::Importer::ImportModelFromFile(const std::string& filePath)
-{
-    Model model;
-    
+void Atom::Importer::ImportModelFromFile(Model& model, const std::string& filePath)
+{    
     //Parse the file format
 
-    unsigned flags = aiProcess_Triangulate | aiProcess_CalcTangentSpace |
+    unsigned flags = aiProcess_Triangulate | 
+        aiProcess_GenNormals | 
+        aiProcess_GenUVCoords |
+        aiProcess_CalcTangentSpace |
         aiProcess_JoinIdenticalVertices |
         aiProcess_GenBoundingBoxes |
         aiProcess_MakeLeftHanded |
         aiProcess_FixInfacingNormals | 
         aiProcess_SplitLargeMeshes |
-        aiProcess_TransformUVCoords;
+        aiProcess_TransformUVCoords ; 
 
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(filePath, flags);
@@ -32,13 +35,21 @@ Model& Atom::Importer::ImportModelFromFile(const std::string& filePath)
         assert(false);
     }
 
+    model.m_SourcePath = scene->GetShortFilename(filePath.c_str());
+
     //Import each mesh
     if (scene->HasMeshes()) {
         model.m_Meshes.resize(scene->mNumMeshes);
+        model.m_NumMeshes = scene->mNumMeshes;
 
         for (int i = 0; i < scene->mNumMeshes; i++) {
             Mesh mesh;
             auto& sceneMesh = scene->mMeshes[i];
+
+            //Mesh Metadata
+            mesh.vertexCount = sceneMesh->mNumVertices / (sizeof(Vector3f) / sizeof(float));
+            mesh.faceCount = sceneMesh->mNumFaces;
+            mesh.name = sceneMesh->mName.C_Str();
 
             //Mesh Positions
             if (sceneMesh->HasPositions()) {
@@ -84,17 +95,90 @@ Model& Atom::Importer::ImportModelFromFile(const std::string& filePath)
             model.m_Meshes[i] = mesh;
         }
     }
-    
 
-    return model;
 }
 
-Model& Atom::Importer::ImportModelFromImage(const std::string& filePath)
+template<typename T>
+T ReadData(std::ifstream& inFile, uint64_t& offset, uint64_t numBytes, T* pData = nullptr) {
+    if (pData != nullptr) {
+        //Load the data directly into the supplied pointer
+        inFile.seekg(offset);
+        offset += numBytes;
+        inFile.read((char*)pData, numBytes);
+        return *pData;
+    }
+}
+
+void Atom::Importer::ImportModelFromImage(Model& model, const std::string& filePath)
 {
-    Model model;
-    
     //Parse the file format
+    
+    size_t fileOffset = 0;
+    std::ifstream inFile(filePath.c_str(), std::ios::binary | std::ios::in);
+
+    auto ReadString = [&](std::string& str) {
+        uint64_t strLen;
+        ReadData(inFile, fileOffset, 8, &strLen);
+
+        str.resize(strLen);
+        ReadData(inFile, fileOffset, strLen, str.data());
+    };
+
+    //VERSION
+    unsigned version;
+    ReadData(inFile, fileOffset, 4, &version);
+
+    //SOURCE FILE
+    ReadString(model.m_SourcePath);
+
+    //HASH ID
+    ReadData(inFile, fileOffset, 32, model.m_HashID);
+
+    //MESH COUNT
+    ReadData(inFile, fileOffset, 8, &model.m_NumMeshes);
+
+    //Per mesh
+    for (size_t i = 0; i < model.m_NumMeshes; i++) {
+        Mesh mesh;
+
+        //MESH NAME
+        ReadString(mesh.name);
+
+        //VERTEX COUNT
+        ReadData(inFile, fileOffset, 8, &mesh.vertexCount);
+
+        //FACE COUNT
+        ReadData(inFile, fileOffset, 8, &mesh.faceCount);
+
+        //VERTEX POSITIONS
+        mesh.positions.resize(mesh.vertexCount);
+        ReadData(inFile, fileOffset, sizeof(Vector3f) * mesh.vertexCount, mesh.positions.data());
+
+        //TEXTURE COORDINATES 
+        size_t texCoordCount;
+        ReadData(inFile, fileOffset, 8, &texCoordCount);
+        mesh.texCoord.resize(texCoordCount);
+        ReadData(inFile, fileOffset, sizeof(Vector3f) * texCoordCount, mesh.texCoord.data());
+
+        //VERTEX NORMALS
+        mesh.normals.resize(mesh.vertexCount);
+        ReadData(inFile, fileOffset, sizeof(Vector3f) * mesh.vertexCount, mesh.normals.data());
+
+        //VERTEX TANGENTS
+        mesh.tangents.resize(mesh.vertexCount);
+        ReadData(inFile, fileOffset, sizeof(Vector3f) * mesh.vertexCount, mesh.tangents.data());
+
+        //VERTEX BINORMALS
+        mesh.binormals.resize(mesh.vertexCount);
+        ReadData(inFile, fileOffset, sizeof(Vector3f) * mesh.vertexCount, mesh.binormals.data());
 
 
-    return model;
+        //INDICES 
+        mesh.indices.resize(mesh.faceCount * 3);
+        ReadData(inFile, fileOffset, sizeof(uint32_t), mesh.indices.data());
+
+
+        model.m_Meshes.push_back(mesh);
+    }
+
 }

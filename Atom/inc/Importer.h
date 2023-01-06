@@ -8,9 +8,9 @@ namespace Atom {
 
     class Importer {
     public:
-        static Model& ImportModelFromFile(const std::string& filePath);
+        static void ImportModelFromFile(Model& model, const std::string& filePath);
 
-        static Model& ImportModelFromImage(const std::string& filepath);
+        static void ImportModelFromImage(Model& model, const std::string& filepath);
     };
 }
 

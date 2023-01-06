@@ -27,13 +27,13 @@ Atom::Model::Model(Model&& model) noexcept
 void Atom::Model::ImportFromFile(const std::string& filePath)
 {
     //Invoke the Importer for this file
-    Importer::ImportModelFromFile(filePath);
+    Importer::ImportModelFromFile(*this, filePath);
 }
 
 
 void Atom::Model::LoadFromBinary(const std::string& imagePath)
 {
     //Invoke the importer for this image
-    Importer::ImportModelFromImage(imagePath);
+    Importer::ImportModelFromImage(*this, imagePath);
 }
 
