@@ -25,13 +25,13 @@ namespace Atom {
     */
     class Model {
     public:
+        //TODO: Replace with accessor methods instead of friendship
         friend class Importer;
-
-        friend class Exporter;
+        friend class Exporter; 
 
         Model();
         //Model(const Model& model);
-        //Model(Model&& model) noexcept;
+        Model(Model&& model) noexcept;
 
         void ImportFromFile(const std::string& filePath);
         void LoadFromBinary(const std::string& imagePath);

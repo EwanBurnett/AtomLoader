@@ -19,10 +19,16 @@ Atom::Model::Model()
     
 //}
 
-//Atom::Model::Model(Model&& model) noexcept
-//{
-
-//}
+Atom::Model::Model(Model&& model) noexcept
+{
+    m_HashID[0] = model.m_HashID[0];
+    m_HashID[1] = model.m_HashID[1];
+    m_HashID[2] = model.m_HashID[2];
+    m_HashID[3] = model.m_HashID[3];
+    m_NumMeshes = model.m_NumMeshes;
+    m_SourcePath = model.m_SourcePath;
+    m_Meshes = std::move(model.m_Meshes);
+}
 
 void Atom::Model::ImportFromFile(const std::string& filePath)
 {

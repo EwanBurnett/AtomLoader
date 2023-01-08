@@ -189,8 +189,6 @@ void Atom::Importer::ImportModelFromImage(Model& model, const std::string& fileP
         mesh.indices.resize(mesh.faceCount * 3);
         ReadData(inFile, fileOffset, sizeof(uint32_t) * mesh.indices.size(), mesh.indices.data());
 
-
-        //model.m_Meshes.push_back(mesh);
     }
 
     inFile.close();
