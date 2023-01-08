@@ -24,8 +24,8 @@ void Atom::Exporter::ExportModelToImage(const Model& model, const std::string& e
     //Serialize the model, and write out each element. 
     WriteData(outFile, ATOM_VERSION, 4); //VERSION [4]
     //SOURCE NAME 
-    WriteData(outFile, model.m_SourcePath.length(), 8);
-    WriteDataPtr(outFile, model.m_SourcePath.data(), model.m_SourcePath.length() * sizeof(char));
+    WriteData(outFile, model.m_SourcePath.size(), 8);
+    WriteDataPtr(outFile, model.m_SourcePath.data(), model.m_SourcePath.size() * sizeof(char));
     
     //HASHED ID
     WriteData(outFile, model.m_HashID, 32);
@@ -36,8 +36,8 @@ void Atom::Exporter::ExportModelToImage(const Model& model, const std::string& e
     //Write each mesh
     for (auto& mesh : model.m_Meshes) {
         //NAME
-        WriteData(outFile, mesh.name.length(), 8);
-        WriteDataPtr(outFile, mesh.name.data(), mesh.name.length() * sizeof(char));
+        WriteData(outFile, mesh.name.size(), 8);
+        WriteDataPtr(outFile, mesh.name.data(), mesh.name.size() * sizeof(char));
 
         //VERTEX COUNT
         WriteData(outFile, mesh.vertexCount, 8);
@@ -49,26 +49,29 @@ void Atom::Exporter::ExportModelToImage(const Model& model, const std::string& e
         WriteDataPtr(outFile, mesh.positions.data(), mesh.vertexCount * sizeof(Vector3f));
 
         //TEXTURE COORDINATES
-        WriteData(outFile, mesh.texCoord.size(), 8);
-        WriteDataPtr(outFile, mesh.texCoord.data(), mesh.texCoord.size() * sizeof(Vector3f)); //TODO: Write Vector2f texcoords
+        WriteData(outFile, mesh.texCoord.size(), 8); //Num UV channels
+        for (size_t i = 0; i < mesh.texCoord.size(); i++)
+        {
+            WriteData(outFile, mesh.texCoord[i].size(), 8);
+            WriteDataPtr(outFile, mesh.texCoord.data(), mesh.texCoord[i].size() * sizeof(Vector2f));
+        }
 
         //VERTEX NORMALS
-        WriteDataPtr(outFile, mesh.normals.data(), mesh.vertexCount * sizeof(Vector3f));
+        WriteData(outFile, mesh.normals.size(), 8);
+        WriteDataPtr(outFile, mesh.normals.data(), mesh.normals.size() * sizeof(Vector3f));
 
         //VERTEX TANGENTS
-        WriteDataPtr(outFile, mesh.tangents.data(), mesh.vertexCount * sizeof(Vector3f));
+        WriteData(outFile, mesh.tangents.size(), 8);
+        WriteDataPtr(outFile, mesh.tangents.data(), mesh.tangents.size() * sizeof(Vector3f));
 
         //VERTEX BINORMALS
-        WriteDataPtr(outFile, mesh.binormals.data(), mesh.vertexCount * sizeof(Vector3f));
+        WriteData(outFile, mesh.binormals.size(), 8);
+        WriteDataPtr(outFile, mesh.binormals.data(), mesh.binormals.size() * sizeof(Vector3f));
 
         //INDICES
-        WriteDataPtr(outFile, mesh.indices.data(), mesh.indices.size());
-
-
-       
-
+        WriteDataPtr(outFile, mesh.indices.data(), mesh.indices.size() * sizeof(uint32_t));
     }
 
-
+    outFile.close();
     
 }

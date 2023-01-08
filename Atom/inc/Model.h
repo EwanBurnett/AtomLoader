@@ -12,7 +12,7 @@ namespace Atom {
         uint64_t faceCount;
         std::string name;
         std::vector<Vector3f> positions;
-        std::vector<Vector3f> texCoord;
+        std::vector<std::vector<Vector2f>> texCoord;
         std::vector<Vector3f> normals;
         std::vector<Vector3f> tangents;
         std::vector<Vector3f> binormals;
@@ -30,8 +30,8 @@ namespace Atom {
         friend class Exporter;
 
         Model();
-        Model(const Model& model);
-        Model(Model&& model) noexcept;
+        //Model(const Model& model);
+        //Model(Model&& model) noexcept;
 
         void ImportFromFile(const std::string& filePath);
         void LoadFromBinary(const std::string& imagePath);

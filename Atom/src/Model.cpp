@@ -14,15 +14,15 @@ Atom::Model::Model()
     m_NumMeshes = 0;
 }
 
-Atom::Model::Model(const Model& model)
-{
+//Atom::Model::Model(const Model& model)
+//{
+    
+//}
 
-}
+//Atom::Model::Model(Model&& model) noexcept
+//{
 
-Atom::Model::Model(Model&& model) noexcept
-{
-
-}
+//}
 
 void Atom::Model::ImportFromFile(const std::string& filePath)
 {
